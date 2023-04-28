@@ -12,11 +12,17 @@ typedef struct _TreeNode {
 	struct _TreeNode* right;
 } TreeNode;
 
+typedef struct _BitCode {
+	uint64_t bits;
+	size_t num_bits;
+} BitCode;
+
 Node* make_huffman_pq(Frequencies freqs);
 TreeNode* make_huffman_tree(Node* head);
 void destroy_huffman_tree(TreeNode** a_root);
 void write_coding_table(TreeNode* root, BitWriter* a_writer);
-void write_compressed(TreeNode* root, BitWriter* a_writer, uint8_t* uncompressed_bytes);
+void write_compressed(TreeNode* root, BitWriter* a_writer, uint8_t const* uncompressed_bytes, size_t num_uncompressed_bytes);
+void compress_file(char const* path);
 
 #endif
 /* vim: set tabstop=4 shiftwidth=4 fileencoding=utf-8 noexpandtab: */

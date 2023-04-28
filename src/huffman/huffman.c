@@ -2,13 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 #include "huffman.h"
 
 static int _cmp_huffman(void const* a_left_value, void const* a_right_value) {
 	const TreeNode* left_node  = a_left_value;
 	const TreeNode* right_node = a_right_value;
 
-	/*
+	/* // This is much simpler than I expected, though less robust.
 	bool is_left_node_cluster = left_node->left  != NULL && left_node->right  != NULL;
 	bool is_right_node_cluster = right_node->left != NULL && right_node->right != NULL;
 
@@ -99,16 +100,11 @@ void write_coding_table(TreeNode* root, BitWriter* a_writer) {
 		write_bits(a_writer, 0x00, 1); // write a 0
 	}
 	else {
-		write_bits(a_writer, 0xff, 1); // write a 1
+		write_bits(a_writer, 0x01, 1); // write a 1
 		write_bits(a_writer, root -> character, 8); // write character
 	}
 }
 
-
-typedef struct _BitCode { // From hint, tried to make it static, but errors were thrown
-	uint8_t bits;
-	int     num_bits;
-} BitCode;
 
 static void _create_encoding_table(TreeNode* root, BitCode* encoding_table, uint8_t bit_code, 
 																					int num_bits) {
@@ -118,18 +114,52 @@ static void _create_encoding_table(TreeNode* root, BitCode* encoding_table, uint
 
 	// Add a 0 to the code and traverse left
 	_create_encoding_table(root -> left,  encoding_table,  bit_code << 1,         num_bits + 1);
-	// add a 1 to the code and traverse right
+
+	// Add a 1 to the code and traverse right
 	_create_encoding_table(root -> right, encoding_table, (bit_code << 1) | 0x01, num_bits + 1);
+
+	// Visit root
 	if(root -> left == NULL && root -> right == NULL) { // Visit root if it is a leaf
 		encoding_table[root -> character] = (BitCode) { .bits = bit_code, .num_bits = num_bits };
 	}
 }
 
-void write_compressed(TreeNode* root, BitWriter* a_writer, uint8_t* uncompressed_bytes) {
-	BitCode codes[256] = { { .bits = 0, .num_bits = 0 } }; // Initialize all codes to 0.
+void write_compressed(TreeNode* root, BitWriter* a_writer, uint8_t const* uncompressed_bytes, size_t num_uncompressed_bytes) {
+	BitCode codes[256] = { { .bits = 0, .num_bits = 0 } }; // Cache of codes for each ascii value
 	_create_encoding_table(root, codes, 0x00, 0); // Create the encoding table
-	for(int i = 0; uncompressed_bytes[i] != '\0'; i++) {
+	for(int i = 0; i < num_uncompressed_bytes; i++) {
 		write_bits(a_writer, codes[uncompressed_bytes[i]].bits, codes[uncompressed_bytes[i]].num_bits); // Write the compressed bits for each character in uncompressed_bytes
 	}
 }
+
+static uint8_t const* _read_file(char const* path) {
+	FILE* file = fopen(path, "r");
+	fseek(file, 0, SEEK_END);
+	size_t num_bytes = ftell(file);
+	uint8_t* file_contents = malloc(sizeof(*file_contents) * num_bytes);
+	fread(file_contents, sizeof(*file_contents), num_bytes, file);
+	fclose(file);
+	return file_contents;
+}
+
+bool compress_file(char const* path) {
+	Frequencies freqs = {0};
+	const char* error;
+	if(!calc_frequencies(freqs, path, &error)) {
+		printf("calc_frequencies failed: %s\n", error);
+		return false;
+	}
+	Node* head = make_huffman_pq(freqs);
+	TreeNode* root = make_huffman_tree(head);
+	char* compressed_path = malloc(sizeof(*compressed_path) * (strlen(path) + 6)); // +6 for '\0' and .huff
+	strncpy(compressed_path, path, strlen(path) + 1); // +1 to copy null terminator TODO: Check if safe.
+	strcat(compressed_path, ".huff");
+	BitWriter writer = open_bit_writer(compressed_path);
+	write_coding_table(root, &writer);
+	uint8_t const* file_contents = _read_file(path);
+	write_compressed(root, &writer, file_contents, root -> frequency);
+	close_bit_writer(&writer);
+	return true;
+}
+
 /* vim: set tabstop=4 shiftwidth=4 fileencoding=utf-8 noexpandtab: */

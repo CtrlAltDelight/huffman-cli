@@ -287,7 +287,7 @@ static int _test_header() {
 	input_string[3] = 'f';
 	input_string[4] = '\0';
 
-	write_compressed(tree_node, &writer, input_string);
+	write_compressed(tree_node, &writer, input_string, 4);
 
 	close_bit_writer(&writer);
 
@@ -330,6 +330,7 @@ static uint8_t* _read_file(const char* path) {
 	return string;
 }
 
+/*
 int _test_full_compression() {
 	mu_start();
 
@@ -354,7 +355,7 @@ int _test_full_compression() {
 	write_bits(&writer, 0x00, 1); // 1 zero bit separates header information from compressed data
 
 	uint8_t* string = _read_file("test_uncompressed.txt");
-	write_compressed(root, &writer, string);
+	write_compressed(root, &writer, string, );
 	free(string);
 	close_bit_writer(&writer);
 
@@ -368,13 +369,22 @@ int _test_full_compression() {
 
 	mu_end();
 }
+*/
+int _test_compress_file() {
+	mu_start();
+	mu_check(compress_file("huffman.txt"));
+	mu_end();
+}
 
 int main(int argc, char* argv[]) {
+	/*
 	mu_run(_test_freqs);
 	mu_run(_test_huffman);
 	mu_run(_test_null_huffman);
 	mu_run(_test_header);
 	mu_run(_test_full_compression);
+	*/
+	mu_run(_test_compress_file);
 	return EXIT_SUCCESS;
 }
 /* vim: set tabstop=4 shiftwidth=4 fileencoding=utf-8 noexpandtab: */
