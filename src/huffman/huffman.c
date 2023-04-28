@@ -142,6 +142,49 @@ static uint8_t const* _read_file(char const* path) {
 	return file_contents;
 }
 
+/*
+void write_header_information(TreeNode* root, BitWriter* a_writer, ) {
+	write_coding_table(root, &writer);
+}
+*/
+
+TreeNode* recreate_huffman_tree(char const* path) {
+	BitReader reader = open_bit_reader(path);
+	Node* head = NULL;
+	while(true) {
+		read_bits(&reader, 1);
+		uint8_t bit = reader_tell(reader);
+		assert(bit == 0x01 || bit == 0x00);
+		if(bit == 0x01) {
+			read_bits(&reader, 8);
+			TreeNode* new_node = malloc(sizeof(*new_node));
+			*new_node = (TreeNode) {
+				.character = reader_tell(reader)
+			};
+
+			stack_push(&head, new_node);
+		}
+		else {
+			if(head != NULL && head -> next == NULL) {
+				break;
+			}
+			TreeNode* new_node = malloc(sizeof(*new_node));
+			*new_node = (TreeNode) {
+				.right = head->a_value,
+				.left = head->next->a_value,
+				.character = '\0'
+			};
+			free(stack_pop(&head));
+			free(stack_pop(&head));
+			stack_push(&head, new_node);
+		}
+	}
+	close_bit_reader(&reader);
+	TreeNode* root = head -> a_value;
+	free(stack_pop(&head));
+	return root;
+}
+
 bool compress_file(char const* path) {
 	Frequencies freqs = {0};
 	const char* error;
@@ -161,5 +204,11 @@ bool compress_file(char const* path) {
 	close_bit_writer(&writer);
 	return true;
 }
+
+/*
+bool uncompress_file(char const* path) {
+	// read file bit by bit
+}
+*/
 
 /* vim: set tabstop=4 shiftwidth=4 fileencoding=utf-8 noexpandtab: */

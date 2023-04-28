@@ -25,7 +25,7 @@ CFLAGS_GCOV=$(CFLAGS) -fprofile-arcs -ftest-coverage
 # RULES
 #
 $(EXECUTABLE): $(SRC_C) $(TEST_C) $(SRC_H)
-	$(CC) -o $(EXECUTABLE) $(SRC_C) $(TEST_C) $(CFLAGS) ../../obj/priority_queue/priority_queue.o ../../obj/bit_writer/bit_writer.o ../../obj/frequencies/frequencies.o
+	$(CC) -o $(EXECUTABLE) $(SRC_C) $(TEST_C) $(CFLAGS) ../../obj/priority_queue/priority_queue.o ../../obj/bit_writer/bit_writer.o ../../obj/frequencies/frequencies.o ../../obj/bit_reader/bit_reader.o
 
 test: $(EXECUTABLE)
 	./$(EXECUTABLE)
