@@ -1,0 +1,12 @@
+0x1234 0001 0010  0011 0100
+
+The most bits we need to store at once is 16.
+
+The most bits that need to be read at one time is 8 bits, but they could be between bytes. 0000 0001  1111 1110
+
+When reading 1 bit at a time, once we get to this position: 0000 0000  1111 1111
+The "current byte" should be shifted to the left byte, and the next needed byte should be moved into the second byte's spot if !feof.
+
+
+if you do 
+writer.current_byte >> (8 - (8 - writer.num_bits_left)) & 0xff >> ( 8 - ( 8 - writer.num_bits_left)), you will get the current_bits
