@@ -391,19 +391,29 @@ int _test_read_header() {
 	write_coding_table(root, &writer);
 	close_bit_writer(&writer);
 
-	TreeNode* re_root = recreate_huffman_tree(header_path);
+	BitReader reader = open_bit_reader(header_path);
+	TreeNode* re_root = recreate_huffman_tree(&reader);
+	close_bit_reader(&reader);
+
 	mu_check(re_root != NULL);
-	mu_check(re_root -> left -> left -> character == 'f');
-	mu_check(re_root -> left -> right -> left -> left -> character == 'h');
-	mu_check(re_root -> left -> right -> left -> right -> character == 'l');
-	mu_check(re_root -> left -> right -> right -> character == ' ');
-	mu_check(re_root -> right -> left -> left -> character == 'u');
-	mu_check(re_root -> right -> left -> right -> left -> character == 'y');
-	mu_check(re_root -> right -> left -> right -> right -> character == 'a');
-	mu_check(re_root -> right -> right -> left -> character == 'm');
-	mu_check(re_root -> right -> right -> right -> left -> character == 'n');
+	mu_check(re_root -> left -> left -> character                     == 'f');
+	mu_check(re_root -> left -> right -> left -> left -> character    == 'h');
+	mu_check(re_root -> left -> right -> left -> right -> character   == 'l');
+	mu_check(re_root -> left -> right -> right -> character           == ' ');
+	mu_check(re_root -> right -> left -> left -> character            == 'u');
+	mu_check(re_root -> right -> left -> right -> left -> character   == 'y');
+	mu_check(re_root -> right -> left -> right -> right -> character  == 'a');
+	mu_check(re_root -> right -> right -> left -> character           == 'm');
+	mu_check(re_root -> right -> right -> right -> left -> character  == 'n');
 	mu_check(re_root -> right -> right -> right -> right -> character == 's');
 
+	mu_end();
+}
+
+int _test_uncompress_file() {
+	mu_start();
+	mu_check(compress_file("huffman.txt"));
+	mu_check(uncompress_file("huffman.txt.huff"));
 	mu_end();
 }
 
@@ -417,6 +427,7 @@ int main(int argc, char* argv[]) {
 	*/
 	//mu_run(_test_compress_file);
 	mu_run(_test_read_header);
+	mu_run(_test_uncompress_file);
 	return EXIT_SUCCESS;
 }
 /* vim: set tabstop=4 shiftwidth=4 fileencoding=utf-8 noexpandtab: */
