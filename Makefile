@@ -19,6 +19,7 @@ CLEAR=\033[0m
 
 # RULES
 
+all: $(EXECUTABLE)
 
 print: 
 	@echo "SRC_C:"
@@ -31,7 +32,8 @@ print:
 obj/%.o: src/%.c # Any .o file with prerequisite of itself.c (EX: make huffman/huffman.o)
 	@echo -e "$(YELLOW)Building $@ from $<...$(CLEAR)"
 	mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@ # $< is the first prerequisite (EX: huffman.c), $@ is the target file (EX: huffman.o)
+	@# $< is the first prerequisite (EX: huffman.c), $@ is the target file (EX: huffman.o)
+	$(CC) $(CFLAGS) -c $< -o $@
 	@echo #newline
 
 $(EXECUTABLE): $(OBJS)
