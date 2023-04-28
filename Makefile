@@ -1,10 +1,9 @@
 # VARIABLES
 
 # Define file names
-MAIN_C=main.c
 SRC_C=$(filter-out $(wildcard src/**/test*.c), $(wildcard src/**/*.c))
 SRC_H=$(wildcard include/*.h)
-OBJS=$(SRC_C:src/%.c=obj/%.o) $(MAIN_C:.c=.o) # Same as SRC_C, but replace src/ at the beginning with obj/ and replace .c with .o
+OBJS=$(SRC_C:src/%.c=obj/%.o) # Same as SRC_C, but replace src/ at the beginning with obj/ and replace .c with .o
 EXECUTABLE=bin/huffmancli
 EXECUTABLE_GCOV=$(EXECUTABLE)_gcov
 
@@ -33,11 +32,13 @@ obj/%.o: src/%.c # Any .o file with prerequisite of itself.c (EX: make huffman/h
 	@echo -e "$(YELLOW)Building $@ from $<...$(CLEAR)"
 	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@ # $< is the first prerequisite (EX: huffman.c), $@ is the target file (EX: huffman.o)
+	@echo #newline
 
 $(EXECUTABLE): $(OBJS)
 	@echo -e "$(YELLOW)Building $@ from $^...$(CLEAR)"
 	mkdir -p bin
 	$(CC) $(CFLAGS) $^ -o $@
+	@echo
 
 run: $(EXECUTABLE)
 	@echo -e "$(YELLOW)Running $<...$(CLEAR)"
