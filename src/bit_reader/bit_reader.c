@@ -45,9 +45,6 @@ void get_byte_reader(BitReader* a_reader) {
 	if(!feof(a_reader -> file)) {
 		a_reader -> current_byte |= new_byte;
 	}
-	else {
-		printf("BitReader has reached EOF!\n");
-	}
 }
 
 void close_bit_reader(BitReader* a_reader) {
