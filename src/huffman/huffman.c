@@ -159,10 +159,17 @@ bool compress_file(char const* path) {
 	strcat(compressed_path, ".huff");
 
 	BitWriter writer = open_bit_writer(compressed_path);
+	// put a 4 byte unsigned integer as the 
+	unsigned int num_bytes = root->frequency;
+	write_bits(&writer, num_bytes >> (8 * 3), 8);
+	write_bits(&writer, num_bytes >> (8 * 2), 8);
+	write_bits(&writer, num_bytes >> (8 * 1), 8);
+	write_bits(&writer, num_bytes, 8);
+
 	write_coding_table(root, &writer);
 	write_bits(&writer, 0x00, 1); // separate the coding table from the encoded bits with a 0
 	uint8_t const* file_contents = _read_file(path);
-	write_compressed(root, &writer, file_contents, root -> frequency);
+	write_compressed(root, &writer, file_contents, num_bytes);
 	close_bit_writer(&writer);
 	return true;
 }
@@ -202,10 +209,14 @@ TreeNode* recreate_huffman_tree(BitReader* a_reader) {
 	return root;
 }
 
-static void _write_character_from_tree_code(TreeNode* root, BitReader* a_reader, BitWriter* a_writer) {
+static void _write_character_from_tree_code(TreeNode* root, BitReader* a_reader, BitWriter* a_writer, unsigned int* a_num_uncompressed_bytes) {
 	// If at a leaf, print the ASCII value
+	if(*a_num_uncompressed_bytes <= 0) {
+		return;
+	}
 	if(root -> left == NULL && root -> right == NULL) {
 		write_bits(a_writer, root -> character, 8);
+		*a_num_uncompressed_bytes -= 1;
 		return;
 	}
 
@@ -216,30 +227,40 @@ static void _write_character_from_tree_code(TreeNode* root, BitReader* a_reader,
 
 	// traverse in the direction of the bit
 	if(bit == 0x00) {
-		_write_character_from_tree_code(root -> left, a_reader, a_writer);
+		_write_character_from_tree_code(root -> left, a_reader, a_writer, a_num_uncompressed_bytes);
 	}
 	else if(bit == 0x01) {
-		_write_character_from_tree_code(root -> right, a_reader, a_writer);
+		_write_character_from_tree_code(root -> right, a_reader, a_writer, a_num_uncompressed_bytes);
 	}
 }
 
-void write_uncompressed(TreeNode* root, BitReader* a_reader, BitWriter* a_writer) {
+void write_uncompressed(TreeNode* root, BitReader* a_reader, BitWriter* a_writer, unsigned int num_uncompressed_bytes) {
 	while(!feof(a_reader->file)) {
-		_write_character_from_tree_code(root, a_reader, a_writer);
+		_write_character_from_tree_code(root, a_reader, a_writer, &num_uncompressed_bytes);
 	}
 }
 
 bool uncompress_file(char const* path) {
-	BitReader reader = open_bit_reader(path);
-	TreeNode* root = recreate_huffman_tree(&reader);
-
 	// Add .unhuff to the path
 	char* uncompressed_path = malloc(sizeof(*uncompressed_path) * (strlen(path) + 8)); // +6 for '\0' and .unhuff
 	strncpy(uncompressed_path, path, strlen(path) + 1); // +1 to copy null terminator TODO: Check if safe.
 	strcat(uncompressed_path, ".unhuff");
 
+	BitReader reader = open_bit_reader(path);
+	// read the unsigned 4 byte int
+	read_bits(&reader, 8);
+	unsigned int num_uncompressed_bytes = reader_tell(reader);
+	read_bits(&reader, 8);
+	num_uncompressed_bytes = (num_uncompressed_bytes << 8) | reader_tell(reader);
+	read_bits(&reader, 8);
+	num_uncompressed_bytes = (num_uncompressed_bytes << 8) | reader_tell(reader);
+	read_bits(&reader, 8);
+	num_uncompressed_bytes = (num_uncompressed_bytes << 8) | reader_tell(reader);
+
+	TreeNode* root = recreate_huffman_tree(&reader);
+
 	BitWriter writer = open_bit_writer(uncompressed_path);
-	write_uncompressed(root, &reader, &writer);
+	write_uncompressed(root, &reader, &writer, num_uncompressed_bytes);
 	close_bit_reader(&reader);
 	close_bit_writer(&writer);
 

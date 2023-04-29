@@ -28,7 +28,7 @@ bool compress_file(char const* path);
 
 TreeNode* recreate_huffman_tree(BitReader* a_reader);
 bool uncompress_file(char const* path);
-void write_uncompressed(TreeNode* root, BitReader* a_reader, BitWriter* a_writer);
+void write_uncompressed(TreeNode* root, BitReader* a_reader, BitWriter* a_writer, unsigned int num_uncompressed_bytes);
 
 #endif
 /* vim: set tabstop=4 shiftwidth=4 fileencoding=utf-8 noexpandtab: */
