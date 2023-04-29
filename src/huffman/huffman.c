@@ -235,7 +235,7 @@ static void _write_character_from_tree_code(TreeNode* root, BitReader* a_reader,
 }
 
 void write_uncompressed(TreeNode* root, BitReader* a_reader, BitWriter* a_writer, unsigned int num_uncompressed_bytes) {
-	while(!feof(a_reader->file)) {
+	while(!feof(a_reader->file) && num_uncompressed_bytes > 0) {
 		_write_character_from_tree_code(root, a_reader, a_writer, &num_uncompressed_bytes);
 	}
 }
@@ -256,6 +256,7 @@ bool uncompress_file(char const* path) {
 	num_uncompressed_bytes = (num_uncompressed_bytes << 8) | reader_tell(reader);
 	read_bits(&reader, 8);
 	num_uncompressed_bytes = (num_uncompressed_bytes << 8) | reader_tell(reader);
+	printf("num_uncompressed == %d\n", num_uncompressed_bytes);
 
 	TreeNode* root = recreate_huffman_tree(&reader);
 
