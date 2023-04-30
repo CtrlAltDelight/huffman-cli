@@ -106,7 +106,7 @@ void write_coding_table(TreeNode* root, BitWriter* a_writer) {
 }
 
 
-static void _create_encoding_table(TreeNode* root, BitCode* encoding_table, uint8_t bit_code, 
+static void _create_encoding_table(TreeNode* root, BitCode* encoding_table, uint64_t bit_code, 
 																					int num_bits) {
 	if(root == NULL) {
 		return;
@@ -277,7 +277,7 @@ bool uncompress_file(char const* path) {
 	write_uncompressed(root, &reader, &writer, num_uncompressed_bytes);
 	close_bit_reader(&reader);
 	close_bit_writer(&writer);
-	printf("File uncompressed!\nContents in %s\n", uncompressed_path);
+	printf("File uncompressed to %s\n", uncompressed_path);
 
 	return true;
 }
