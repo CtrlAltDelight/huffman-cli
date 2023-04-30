@@ -54,14 +54,12 @@ int main(int argc, char *argv[]) {
     argp_parse(&argp, argc, argv, 0, 0, &arguments); // parse command line arguments
 	
 	if(arguments.should_uncompress) {
-		uncompress_file(arguments.args[0]);
-		return EXIT_SUCCESS;
+		bool is_success = uncompress_file(arguments.args[0]);
+		return is_success;
 	}
 
-	compress_file(arguments.args[0]);
-
-
-    return EXIT_SUCCESS;
+	bool is_success = compress_file(arguments.args[0]);
+	return is_success;
 }
 
 /* vim: set tabstop=4 shiftwidth=4 fileencoding=utf-8 noexpandtab: */
