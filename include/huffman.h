@@ -15,7 +15,7 @@ typedef struct _TreeNode {
 
 typedef struct _BitCode {
 	uint64_t bits;
-	size_t num_bits;
+	int num_bits;
 } BitCode;
 
 Node* make_huffman_pq(Frequencies freqs);
