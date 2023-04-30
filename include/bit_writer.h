@@ -12,7 +12,7 @@ typedef struct {
 } BitWriter;
 
 BitWriter open_bit_writer(const char* path);
-void write_bits(BitWriter* a_writer, uint8_t bits, uint8_t num_bits_to_write);
+void write_bits(BitWriter* a_writer, uint64_t bits, uint64_t num_bits_to_write);
 void flush_bit_writer(BitWriter* a_writer);
 void close_bit_writer(BitWriter* a_writer);
 
