@@ -96,10 +96,10 @@ void write_coding_table(TreeNode* root, BitWriter* a_writer) {
 	write_coding_table(root -> right, a_writer); // Traverse right subtree
 
 	// visit root
-	if(root -> left != NULL && root -> right != NULL) { // If non-leaf or leaf
+	if(root -> left != NULL && root -> right != NULL) { // If non-leaf
 		write_bits(a_writer, 0x00, 1); // write a 0
 	}
-	else {
+	else { // If it is a leaf
 		write_bits(a_writer, 0x01, 1); // write a 1
 		write_bits(a_writer, root -> character, 8); // write character
 	}
@@ -144,10 +144,11 @@ static uint8_t const* _read_file(char const* path) {
 }
 
 bool compress_file(char const* path) {
+	printf("Compressing file: %s...\n", path);
 	Frequencies freqs = {0};
 	const char* error;
 	if(!calc_frequencies(freqs, path, &error)) {
-		printf("calc_frequencies failed: %s\n", error);
+		printf("Could not calculate the frequencies of each character: %s\n", error);
 		return false;
 	}
 	Node* head = make_huffman_pq(freqs);
@@ -171,6 +172,7 @@ bool compress_file(char const* path) {
 	uint8_t const* file_contents = _read_file(path);
 	write_compressed(root, &writer, file_contents, num_bytes);
 	close_bit_writer(&writer);
+	printf("File compressed to %s\n", compressed_path);
 	return true;
 }
 
@@ -190,6 +192,10 @@ TreeNode* recreate_huffman_tree(BitReader* a_reader) {
 			stack_push(&head, new_node);
 		}
 		else {
+			if(head == NULL) {
+				printf("Error when recreating huffman tree. First bit in tree topology should be 1, but it is 0 instead.\n");
+				return NULL;
+			}
 			if(head != NULL && head -> next == NULL) {
 				break;
 			}
@@ -241,6 +247,10 @@ void write_uncompressed(TreeNode* root, BitReader* a_reader, BitWriter* a_writer
 }
 
 bool uncompress_file(char const* path) {
+	printf("Uncompressing file: %s...\n", path);
+	if(strcmp(path + strlen(path) - 4, "huff") != 0) {
+		printf("Warning: Trying to uncompress a file that does not end in .huff\n");
+	}
 	// Add .unhuff to the path
 	char* uncompressed_path = malloc(sizeof(*uncompressed_path) * (strlen(path) + 8)); // +6 for '\0' and .unhuff
 	strncpy(uncompressed_path, path, strlen(path) + 1); // +1 to copy null terminator TODO: Check if safe.
@@ -256,14 +266,18 @@ bool uncompress_file(char const* path) {
 	num_uncompressed_bytes = (num_uncompressed_bytes << 8) | reader_tell(reader);
 	read_bits(&reader, 8);
 	num_uncompressed_bytes = (num_uncompressed_bytes << 8) | reader_tell(reader);
-	printf("num_uncompressed == %d\n", num_uncompressed_bytes);
 
 	TreeNode* root = recreate_huffman_tree(&reader);
+	if(root == NULL) {
+		printf("The tree came back as NULL from recreate_huffman_tree(...)\n");
+		return false;
+	}
 
 	BitWriter writer = open_bit_writer(uncompressed_path);
 	write_uncompressed(root, &reader, &writer, num_uncompressed_bytes);
 	close_bit_reader(&reader);
 	close_bit_writer(&writer);
+	printf("File uncompressed!\nContents in %s\n", uncompressed_path);
 
 	return true;
 }
