@@ -29,6 +29,9 @@ print:
 	@echo "OBJS:"
 	@echo $(OBJS)
 
+copy_headers_to_include:
+	cp $(SRC_C:.c=.h) include/
+
 obj/%.o: src/%.c # Any .o file with prerequisite of itself.c (EX: make huffman/huffman.o)
 	@echo -e "$(YELLOW)Building $@ from $<...$(CLEAR)"
 	mkdir -p $(dir $@)
